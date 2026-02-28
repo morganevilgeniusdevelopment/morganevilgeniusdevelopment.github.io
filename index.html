@@ -5,11 +5,12 @@
   <title>Morgan's Homepage</title>
   <style>
     body {
-      background: #050816;
-      color: white;
-      font-family: Arial, sans-serif;
       margin: 0;
       padding: 0;
+      background: #050816;
+      color: white;
+      font-family: Consolas, monospace;
+      overflow-x: hidden;
       text-align: center;
     }
 
@@ -25,31 +26,78 @@
       position: fixed;
       top: 0;
       left: 0;
+      z-index: 10;
     }
 
     .navbar img {
       height: 40px;
       width: auto;
+      margin-top: 5px;
+      margin-left: 5px;
     }
 
-    .content {
+    /* INTRO SCREEN */
+    #intro {
+      margin-top: 150px;
+      font-size: 1.5rem;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    /* MAIN CONTENT (HIDDEN AT FIRST) */
+    #mainContent {
+      display: none;
       padding-top: 120px;
+    }
+
+    h1 {
+      font-size: 3rem;
+      margin-bottom: 10px;
     }
   </style>
 </head>
 
 <body>
 
-  <!-- TOP BAR WITH LOGO -->
+  <!-- NAVBAR WITH LOGO -->
   <div class="navbar">
     <img src="104525888.png" alt="Luau Logo">
   </div>
 
-  <!-- MAIN PAGE CONTENT -->
-  <div class="content">
+  <!-- INTRO TEXT AREA -->
+  <div id="intro">website.System:Connect(function(startIntro)</div>
+
+  <!-- MAIN CONTENT (HIDDEN UNTIL INTRO FINISHES) -->
+  <div id="mainContent">
     <h1>Welcome to my website!</h1>
-    <p>This site is hosted for free using GitHub Pages.</p>
+    <p>Hosted for free using GitHub Pages.</p>
   </div>
+
+  <script>
+    // Fade in intro text
+    const intro = document.getElementById("intro");
+    const mainContent = document.getElementById("mainContent");
+
+    setTimeout(() => {
+      intro.style.opacity = 1;
+    }, 100);
+
+    // After 2 seconds, change text
+    setTimeout(() => {
+      intro.textContent = ">>>Intro starting";
+    }, 2000);
+
+    // After another 1 second, hide intro and show website
+    setTimeout(() => {
+      intro.style.opacity = 0;
+
+      setTimeout(() => {
+        intro.style.display = "none";
+        mainContent.style.display = "block";
+      }, 500);
+
+    }, 3000);
+  </script>
 
 </body>
 </html>
