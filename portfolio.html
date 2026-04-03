@@ -293,9 +293,62 @@
       transition: opacity 0.35s ease;
     }
     #exit-overlay.active { opacity: 1; pointer-events: all; }
+
+    * { cursor: none !important; }
+
+    #cursor {
+      position: fixed;
+      width: 8px;
+      height: 8px;
+      background: #4da6ff;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 99999;
+      transform: translate(-50%, -50%);
+      mix-blend-mode: screen;
+      transition: transform 0.1s ease;
+    }
+
+    #cursor-ring {
+      position: fixed;
+      width: 28px;
+      height: 28px;
+      border: 1.5px solid #4da6ff99;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 99998;
+      transform: translate(-50%, -50%);
+      transition:
+        width   0.22s cubic-bezier(.25,1.4,.5,1),
+        height  0.22s cubic-bezier(.25,1.4,.5,1),
+        left    0.14s cubic-bezier(.25,1,.5,1),
+        top     0.14s cubic-bezier(.25,1,.5,1),
+        border-radius 0.22s cubic-bezier(.25,1.4,.5,1),
+        border-color  0.15s ease,
+        background    0.15s ease;
+      background: transparent;
+    }
+
+    .spark {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 99997;
+      transform: translate(-50%, -50%);
+      animation: sparkFly 0.5s forwards ease-out;
+    }
+
+    @keyframes sparkFly {
+      0%   { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+      100% { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(0); }
+    }
   </style>
 </head>
 <body>
+
+  <!-- CUSTOM CURSOR -->
+  <div id="cursor"></div>
+  <div id="cursor-ring"></div>
 
   <!-- PAGE-IN TRANSITION (bot intro) -->
   <div id="transition-overlay">
@@ -390,6 +443,105 @@
   <div id="empty">-- no projects found --</div>
 
   <script>
+    /* SMOOTH LERP CURSOR + RING MORPHS INTO HOVER BOX */
+    const cursor = document.getElementById('cursor');
+    const ring   = document.getElementById('cursor-ring');
+
+    let mx = window.innerWidth / 2, my = window.innerHeight / 2;
+    let lx = mx, ly = my;
+    let onEl = false;
+
+    document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+
+    const targets = 'a, button, .nav-item, .card, .tag-btn, .card-link';
+
+    function snapRingToEl(el) {
+      const pad = 7;
+      const r = el.getBoundingClientRect();
+      const cx = r.left + r.width  / 2;
+      const cy = r.top  + r.height / 2;
+      const br = parseFloat(getComputedStyle(el).borderRadius) || 0;
+      ring.style.width        = (r.width  + pad * 2) + 'px';
+      ring.style.height       = (r.height + pad * 2) + 'px';
+      ring.style.left         = cx + 'px';
+      ring.style.top          = cy + 'px';
+      ring.style.borderRadius = Math.min(br + 4, 20) + 'px';
+      ring.style.borderColor  = '#4da6ffdd';
+      ring.style.background   = '#4da6ff0a';
+    }
+
+    function resetRing() {
+      ring.style.width        = '28px';
+      ring.style.height       = '28px';
+      ring.style.borderRadius = '50%';
+      ring.style.borderColor  = '#4da6ff99';
+      ring.style.background   = 'transparent';
+    }
+
+    document.addEventListener('mouseover', e => {
+      const el = e.target.closest(targets);
+      if (el) { onEl = true; snapRingToEl(el); }
+    });
+
+    document.addEventListener('mouseout', e => {
+      const el = e.target.closest(targets);
+      if (el && !el.contains(e.relatedTarget)) {
+        onEl = false;
+        resetRing();
+      }
+    });
+
+    /* Lerp loop — dot trails smoothly, ring follows when not on element */
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    function tick() {
+      lx = lerp(lx, mx, 0.15);
+      ly = lerp(ly, my, 0.15);
+
+      cursor.style.left = mx + 'px';
+      cursor.style.top  = my + 'px';
+
+      if (!onEl) {
+        ring.style.left = lx + 'px';
+        ring.style.top  = ly + 'px';
+      }
+
+      requestAnimationFrame(tick);
+    }
+    tick();
+
+    document.addEventListener('mousedown', () => {
+      cursor.style.transform = 'translate(-50%, -50%) scale(0.4)';
+    });
+    document.addEventListener('mouseup', () => {
+      cursor.style.transform = 'translate(-50%, -50%) scale(1)';
+    });
+
+    /* SPARK on click */
+    const sparkColors = ['#4da6ff', '#8cc6ff', '#ffffff', '#a0d4ff', '#60b8ff'];
+
+    document.addEventListener('click', e => {
+      const count = 14 + Math.floor(Math.random() * 8);
+      for (let i = 0; i < count; i++) {
+        const s = document.createElement('div');
+        s.className = 'spark';
+        const angle = (Math.PI * 2 / count) * i + (Math.random() - 0.5) * 0.6;
+        const dist  = 30 + Math.random() * 55;
+        const dx = Math.cos(angle) * dist;
+        const dy = Math.sin(angle) * dist;
+        s.style.left  = e.clientX + 'px';
+        s.style.top   = e.clientY + 'px';
+        s.style.setProperty('--dx', dx + 'px');
+        s.style.setProperty('--dy', dy + 'px');
+        s.style.background = sparkColors[Math.floor(Math.random() * sparkColors.length)];
+        s.style.width  = (3 + Math.random() * 4) + 'px';
+        s.style.height = s.style.width;
+        s.style.animationDuration = (0.35 + Math.random() * 0.3) + 's';
+        document.body.appendChild(s);
+        s.addEventListener('animationend', () => s.remove());
+      }
+    });
+
     /* Remove transition overlay after animation completes */
     const overlay = document.getElementById('transition-overlay');
     overlay.addEventListener('animationend', () => overlay.remove());
