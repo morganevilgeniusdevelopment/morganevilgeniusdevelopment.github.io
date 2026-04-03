@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <title>Morganevilgenius Development</title>
 
-  <!-- Favicon -->
   <link rel="icon" type="image/png" href="104525888.png">
 
   <style>
@@ -17,7 +16,7 @@
       overflow-x: hidden;
     }
 
-    /* NAVBAR ------------------------------------------------------ */
+    /* NAVBAR */
     .navbar {
       width: 100%;
       height: 60px;
@@ -27,8 +26,7 @@
       padding: 0 20px;
       box-shadow: 0 0 10px rgba(0,0,0,0.5);
       position: fixed;
-      top: 0;
-      left: 0;
+      top: 0; left: 0;
       z-index: 20;
     }
 
@@ -39,61 +37,55 @@
       user-select: none;
     }
 
-    /* NAV LINKS ---------------------------------------------------- */
-    .nav-links {
-      display: flex;
-      gap: 30px;
-    }
+    .nav-links { display: flex; gap: 30px; }
 
     .nav-item {
       position: relative;
       font-size: 18px;
       cursor: pointer;
-      color: #4da6ff; /* default Luau neon-ish blue */
-      transition: transform 0.15s ease;
+      color: #4da6ff;
+      transition: transform 0.15s ease, color 0.15s ease;
       user-select: none;
+      padding: 4px 6px;
     }
 
-    /* the expanding hover box */
     .nav-item::before {
       content: "";
       position: absolute;
-      left: 50%;
-      top: 50%;
+      left: 50%; top: 50%;
       transform: translate(-50%, -50%) scaleX(0) scaleY(0);
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       background: #4da6ff;
       border-radius: 6px;
       z-index: -1;
       opacity: 0;
-      transition:
-        transform 0.22s cubic-bezier(.25,1.4,.5,1),
-        opacity 0.18s ease;
+      transition: transform 0.22s cubic-bezier(.25,1.4,.5,1), opacity 0.18s ease;
     }
 
-    /* Hover effects */
-    .nav-item:hover {
-      color: black;
-      transform: scale(1.12);
-    }
-    .nav-item:hover::before {
-      opacity: 1;
-      transform: translate(-50%, -50%) scaleX(1.25) scaleY(1.7);
-    }
+    .nav-item:hover { color: black; transform: scale(1.12); }
+    .nav-item:hover::before { opacity: 1; transform: translate(-50%,-50%) scaleX(1.25) scaleY(1.7); }
 
-    /* bounce-out when unhovered */
-    .nav-item.unhover {
-      animation: bounceOut 0.22s forwards ease;
-    }
-
-    @keyframes bounceOut {
-      0% { transform: scale(1.12); }
-      40% { transform: scale(0.92); }
+    @keyframes navBounceOut {
+      0%   { transform: scale(1.12); }
+      40%  { transform: scale(0.90); }
+      70%  { transform: scale(1.04); }
       100% { transform: scale(1); }
     }
+    .nav-item.bounce { animation: navBounceOut 0.28s forwards ease; }
 
-    /* INTRO -------------------------------------------------------- */
+    /* EXIT OVERLAY */
+    #exit-overlay {
+      position: fixed;
+      inset: 0;
+      background: #050816;
+      z-index: 9999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    #exit-overlay.active { opacity: 1; pointer-events: all; }
+
+    /* INTRO */
     #intro {
       margin-top: 180px;
       font-size: 1.5rem;
@@ -102,42 +94,35 @@
       transition: opacity 0.4s ease;
     }
 
-    /* COLORING CODE LINES */
-    .code-func { color: #4da6ff; }
+    .code-func  { color: #4da6ff; }
     .code-colon { color: #8cc6ff; }
-    .code-text { color: #c7e0ff; }
+    .code-text  { color: #c7e0ff; }
 
-    /* MAIN CONTENT ------------------------------------------------- */
+    /* MAIN CONTENT */
     #mainContent {
       display: none;
       text-align: center;
       padding-top: 160px;
     }
 
-    h1 {
-      font-size: 3rem;
-      margin-bottom: 10px;
-      color: #4da6ff;
-    }
-    p {
-      font-size: 1.2rem;
-      opacity: 0.8;
-    }
+    h1 { font-size: 3rem; margin-bottom: 10px; color: #4da6ff; }
+    p  { font-size: 1.2rem; opacity: 0.8; }
   </style>
 </head>
 
 <body>
 
+  <div id="exit-overlay"></div>
+
   <!-- NAVBAR -->
   <div class="navbar">
     <img src="104525888.png" alt="Luau Logo">
-
     <div class="nav-links">
-      <div class="nav-item">Portfolio</div>
-      <div class="nav-item">Projects</div>
-      <div class="nav-item">About me</div>
-      <div class="nav-item">Guilds</div>
-      <div class="nav-item">Development</div>
+      <div class="nav-item" id="nav-portfolio">Portfolio</div>
+      <div class="nav-item" id="nav-projects">Projects</div>
+      <div class="nav-item" id="nav-about">About me</div>
+      <div class="nav-item" id="nav-guilds">Guilds</div>
+      <div class="nav-item" id="nav-dev">Development</div>
     </div>
   </div>
 
@@ -157,34 +142,40 @@
   <script>
     const intro = document.getElementById("intro");
     const mainContent = document.getElementById("mainContent");
-    const navItems = document.querySelectorAll(".nav-item");
 
-    /* fade in intro */
+    /* Intro sequence */
     setTimeout(() => { intro.style.opacity = 1; }, 150);
-
-    /* replace intro text */
-    setTimeout(() => {
-      intro.innerHTML = ">>>Intro starting";
-    }, 2000);
-
-    /* hide intro → show content */
+    setTimeout(() => { intro.innerHTML = ">>>Intro starting"; }, 2000);
     setTimeout(() => {
       intro.style.opacity = 0;
-
       setTimeout(() => {
         intro.style.display = "none";
         mainContent.style.display = "block";
       }, 400);
     }, 3000);
 
-    /* prevent glitch on rapid hover/unhover */
-    navItems.forEach(item => {
-      item.addEventListener("mouseleave", () => {
-        item.classList.remove("unhover");
-        void item.offsetWidth; // resets animation
-        item.classList.add("unhover");
+    /* Nav bounce on mouseleave */
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('mouseleave', () => {
+        item.classList.remove('bounce');
+        void item.offsetWidth;
+        item.classList.add('bounce');
+        item.addEventListener('animationend', () => item.classList.remove('bounce'), { once: true });
       });
     });
+
+    /* Navigate with exit fade */
+    function navigateTo(url) {
+      const exit = document.getElementById('exit-overlay');
+      exit.classList.add('active');
+      setTimeout(() => { location.href = url; }, 360);
+    }
+
+    document.getElementById('nav-portfolio').addEventListener('click', () => navigateTo('portfolio.html'));
+    document.getElementById('nav-projects').addEventListener('click',  () => navigateTo('projects.html'));
+    document.getElementById('nav-about').addEventListener('click',     () => navigateTo('index.html#about'));
+    document.getElementById('nav-guilds').addEventListener('click',    () => navigateTo('guilds.html'));
+    document.getElementById('nav-dev').addEventListener('click',       () => navigateTo('development.html'));
   </script>
 
 </body>
